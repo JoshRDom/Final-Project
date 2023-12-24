@@ -25,8 +25,8 @@ object Client extends JFXApp {
   val loader = new FXMLLoader(null, NoDependencyResolver)
   loader.load(getClass.getResourceAsStream("view/MainWindow.fxml")) // insert main screen
   val border: scalafx.scene.layout.BorderPane = loader.getRoot[javafx.scene.layout.BorderPane]()
-  val control = loader.getController[com.hep88.view.MainWindowController#Controller]() // insert main screen controller
-  control.chatClientRef = Option(greeterMain) // wire to controller
+  val control = loader.getController[com.hep88.view.CanvasWindowController#Controller]() // insert main screen controller
+  control.drawingClientRef = Option(greeterMain) // wire to controller
   stage = new PrimaryStage() {
     scene = new Scene(){
       root = border

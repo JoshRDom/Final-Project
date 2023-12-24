@@ -1,5 +1,10 @@
 package hep88.view
-
+import akka.actor.typed.ActorRef
+import com.hep88.DrawingClient
+import com.hep88.User
+import com.hep88.Client
+import scalafx.collections.ObservableBuffer
+import scalafx.Includes._
 import javafx.scene.Group
 import javafx.scene.canvas.Canvas
 import javafx.scene.control.{ColorPicker, ListView, Slider, TextField}
@@ -23,6 +28,10 @@ class CanvasWindowController(
                             private val listMessage: ListView,
                             private val txtMessage: TextField
                             ) {
+  var drawingClientRef: Option[ActorRef[DrawingClient.Command]] = None
+
+  val receivedText: ObservableBuffer[String] = new ObservableBuffer[String]()
+
   // ART STUFF
   // Initialise variables
   // Enum to represent different drawing tools

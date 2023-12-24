@@ -17,10 +17,10 @@ lazy val root = (project in file("."))
       "org.fourthline.cling" % "cling-support" % "2.1.2",
       "ch.qos.logback" % "logback-classic" % "1.2.3",
       "org.scalafx" %% "scalafx" % "21.0.0-R32",
-      "org.scalafx" %% "scalafxml-core-sfx8" % "0.5"
+      "org.scalafx" %% "scalafxml-core-sfx8" % "0.5",
     )
   )
 
-addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full)
+// addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full) // not sure why this doesn't work
 
 fork := true
