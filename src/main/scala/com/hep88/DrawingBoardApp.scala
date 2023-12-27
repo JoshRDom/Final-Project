@@ -1,5 +1,3 @@
-package hep88
-
 package com.hep88
 import akka.cluster.typed._
 import akka.{ actor => classic }
@@ -15,19 +13,20 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 
-object Client extends JFXApp {
+object DrawingBoardApp extends JFXApp {
   implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
-  val greeterMain: ActorSystem[DrawingClient.Command] = ActorSystem(DrawingClient(), "HelloSystem")
+  val greeterMain: ActorSystem[DrawingBoardClient.Command] = ActorSystem(DrawingBoardClient(), "DrawingBoardSystem")
 
-  greeterMain ! DrawingClient.start
+  greeterMain ! DrawingBoardClient.start
 
 
   val loader = new FXMLLoader(null, NoDependencyResolver)
-  loader.load(getClass.getResourceAsStream("view/MainWindow.fxml")) // insert main screen
+  loader.load(getClass.getResourceAsStream("view/DrawingBoardView.fxml"))
   val border: scalafx.scene.layout.BorderPane = loader.getRoot[javafx.scene.layout.BorderPane]()
-  val control = loader.getController[com.hep88.view.CanvasWindowController#Controller]() // insert main screen controller
-  control.drawingClientRef = Option(greeterMain) // wire to controller
+  val control = loader.getController[com.hep88.view.DrawingBoardController#Controller]()
+  control.drawingBoardClientRef = Option(greeterMain)
   stage = new PrimaryStage() {
+    title = "Drawing Board App"
     scene = new Scene(){
       root = border
     }
@@ -36,4 +35,6 @@ object Client extends JFXApp {
   stage.onCloseRequest = handle( {
     greeterMain.terminate
   })
+
+
 }

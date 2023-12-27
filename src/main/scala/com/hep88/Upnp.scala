@@ -1,8 +1,21 @@
-package hep88
+package com.hep88
 
+import org.fourthline.cling.support.model.PortMapping
+import org.fourthline.cling.support.igd.PortMappingListener
+import org.fourthline.cling.model.message.header.STAllHeader;
+import org.fourthline.cling.model.meta.LocalDevice;
+import org.fourthline.cling.model.meta.RemoteDevice;
+import org.fourthline.cling.registry.Registry;
+import org.fourthline.cling.registry.RegistryListener;
 import java.net.InetAddress
+import org.fourthline.cling.{UpnpService, UpnpServiceImpl}
+import collection.JavaConverters._
+import akka.actor.typed.ActorRef
+import akka.actor.typed.Behavior
+import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.{ PostStop }
 
-object Cling {    
+object Cling {
     // UPnP discovery is asynchronous, we need a callback
     val listener: RegistryListener = new RegistryListener() {
 
@@ -12,42 +25,42 @@ object Cling {
 
         def remoteDeviceDiscoveryFailed(registry: Registry, device: RemoteDevice, ex: Exception) {
             println("Discovery failed: " + device.getDisplayString() + " => " + ex)
-         }
+        }
 
         def remoteDeviceAdded( registry: Registry,  device: RemoteDevice) {
             println(
-            "Remote device available: " + device.getDisplayString()
+                "Remote device available: " + device.getDisplayString()
             )
         }
 
         def remoteDeviceUpdated( registry: Registry,  device: RemoteDevice) {
             println(
-            "Remote device updated: " + device.getDisplayString()
+                "Remote device updated: " + device.getDisplayString()
             );
         }
 
         def remoteDeviceRemoved( registry: Registry,  device: RemoteDevice) {
             println(
-            "Remote device removed: " + device.getDisplayString()
+                "Remote device removed: " + device.getDisplayString()
             );
         }
 
         def localDeviceAdded( registry: Registry,  device: LocalDevice) {
             println(
-            "Local device added: " + device.getDisplayString()
+                "Local device added: " + device.getDisplayString()
             );
         }
 
         def localDeviceRemoved( registry: Registry,  device: LocalDevice) {
             println(
-            "Local device removed: " + device.getDisplayString()
+                "Local device removed: " + device.getDisplayString()
             );
         }
 
         def beforeShutdown( registry: Registry) {
             println(
-            "Before shutdown, the registry has devices: "
-            + registry.getDevices().size()
+                "Before shutdown, the registry has devices: "
+                  + registry.getDevices().size()
             );
         }
 
@@ -60,21 +73,21 @@ object Cling {
 
 object Upnp {
     val name = "UpnpManager"
-    trait Command 
+    trait Command
     case class AddPortMapping(port: Int) extends Command
 
     def apply(): Behavior[Upnp.Command] = {
-        Behaviors.setup { context => 
+        Behaviors.setup { context =>
             context.log.info("Starting Cling...")
             val upnpService: UpnpService = new UpnpServiceImpl(Cling.listener)
             Behaviors.receiveMessage[Upnp.Command] {
                 case AddPortMapping(num) =>
                     val mapping = List(
                         new PortMapping(num, InetAddress.getLocalHost().getHostAddress(),
-                                PortMapping.Protocol.TCP, " TCP POT Forwarding"),
+                            PortMapping.Protocol.TCP, " TCP POT Forwarding"),
                         new PortMapping(num, InetAddress.getLocalHost().getHostAddress(),
                             PortMapping.Protocol.UDP, " UDP POT Forwarding")
-                    )               
+                    )
                     val registryListener: RegistryListener = new PortMappingListener(mapping.toArray);
                     upnpService.getRegistry().addListener(registryListener);
                     upnpService.getControlPoint().search(new STAllHeader());
@@ -82,13 +95,13 @@ object Upnp {
                 case _ =>
                     Behaviors.unhandled
             }
-            .receiveSignal {
-                case (context, PostStop) =>
-                    upnpService.shutdown()
-                    // Release all resources and advertise BYEBYE to other UPnP devices
-                    println("Stopping Cling...")
-                    Behaviors.same
-            }
+              .receiveSignal {
+                  case (context, PostStop) =>
+                      upnpService.shutdown()
+                      // Release all resources and advertise BYEBYE to other UPnP devices
+                      println("Stopping Cling...")
+                      Behaviors.same
+              }
         }
     }
 }
