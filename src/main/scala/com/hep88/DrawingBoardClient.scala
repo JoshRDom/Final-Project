@@ -52,7 +52,7 @@ object DrawingBoardClient {
   def messageStarted(): Behavior[DrawingBoardClient.Command] = Behaviors.receive[DrawingBoardClient.Command] { (context, message) =>
     message match {
       case SendMessageL(target, content) =>
-        target ! Message("User " + context.self.hashCode.toString + ": " + content, context.self)
+        target ! Message(nameOpt.get + ": " + content, context.self)
         Behaviors.same
       case Message(msg, from) =>
         Platform.runLater {
@@ -129,13 +129,18 @@ object DrawingBoardClient {
             for (x <- xs) {
               remoteOpt = Some(x)
             }
-            context.self ! StartJoin("User B")
             Behaviors.same
           case StartJoin(name) =>
             nameOpt = Option(name)
             remoteOpt.map ( _ ! DrawingBoardServer.ServerConnect(name, context.self))
             Behaviors.same
+          case Message(msg, from) =>
+            Platform.runLater {
+              DrawingBoardApp.control.addText(msg)
+            }
+            Behaviors.same
           case DrawingBoardClient.Joined(x) =>
+            DrawingBoardApp.control.enableChat()
             members.clear()
             members ++= x
             messageStarted()

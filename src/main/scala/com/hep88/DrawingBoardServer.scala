@@ -39,10 +39,22 @@ object DrawingBoardServer {
         message match {
           // Server protocol algorithm
           case ServerConnect(name, from) =>
-            members += User(name, from)
-            from ! com.hep88.DrawingBoardClient.Joined(members.toList)
+            // check if name exists in list
+            var nameIsTaken = false
             for (user <- members.toList) {
-              user.ref ! com.hep88.DrawingBoardClient.Message(name + " has joined the chat", from)
+              if (user.name == name) {
+                nameIsTaken = true
+              }
+            }
+
+            if (nameIsTaken) {
+              from ! com.hep88.DrawingBoardClient.Message(name + " is already taken. Try a different name.", from)
+            } else {
+              members += User(name, from)
+              from ! com.hep88.DrawingBoardClient.Joined(members.toList)
+              for (user <- members.toList) {
+                user.ref ! com.hep88.DrawingBoardClient.Message(name + " has joined the chat", from)
+              }
             }
             Behaviors.same
           case ServerDisconnect(name, from) =>

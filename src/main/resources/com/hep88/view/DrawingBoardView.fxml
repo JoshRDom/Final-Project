@@ -43,7 +43,7 @@
         <items>
             <ListView fx:id="listUser" prefHeight="587.0" prefWidth="398.0" />
             <ListView fx:id="listMessage" prefHeight="200.0" prefWidth="200.0" />
-            <TextField fx:id="txtMessage" onAction="#handleSend" promptText="Message" scaleShape="false" />
+            <TextField fx:id="txtMessage" onAction="#handleJoin" promptText="Enter a name to join chat" scaleShape="false" />
         </items>
       </SplitPane>
    </right>

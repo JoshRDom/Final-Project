@@ -57,12 +57,23 @@ class DrawingBoardController( // chat stuff
     listUser.items = new ObservableBuffer[User]() ++= x
   }
 
-  // send button onAction, changed to send to all users in listUsers (in theory)
+  // text field onActions
+  def handleJoin(action: ActionEvent): Unit = {
+    if (txtMessage != null)
+      drawingBoardClientRef map (_ ! DrawingBoardClient.StartJoin(txtMessage.text()))
+  }
+
   def handleSend(actionEvent: ActionEvent): Unit ={
     for( user <- listUser.items.getValue ) {
       DrawingBoardApp.greeterMain ! DrawingBoardClient.SendMessageL(user.ref,
         txtMessage.text())
     }
+    txtMessage.text = ""
+  }
+
+  def enableChat(): Unit = {
+    txtMessage.setOnAction(handleSend)
+    txtMessage.setPromptText("Message")
     txtMessage.text = ""
   }
 
