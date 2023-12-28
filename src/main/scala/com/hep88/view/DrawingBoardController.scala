@@ -2,7 +2,7 @@ package com.hep88.view
 import akka.actor.typed.ActorRef
 import scalafxml.core.macros.sfxml
 import scalafx.event.ActionEvent
-import scalafx.scene.input.{MouseEvent,MouseDragEvent}
+import scalafx.scene.input.{MouseDragEvent, MouseEvent}
 import scalafx.scene.control.{ColorPicker, ComboBox, ListView, Slider, TextField}
 import com.hep88.DrawingBoardClient
 import com.hep88.User
@@ -11,6 +11,7 @@ import scalafx.collections.ObservableBuffer
 import scalafx.Includes._
 import scalafx.scene.canvas.Canvas
 import scalafx.scene.paint.Color
+import scalafx.scene.shape.Line
 
 @sfxml
 class DrawingBoardController( // chat stuff
@@ -34,20 +35,21 @@ class DrawingBoardController( // chat stuff
 
   // canvas stuff
   println(canvas)
-  val initialContext = canvas.getGraphicsContext2D()
+  val gc = canvas.getGraphicsContext2D()
+  val line = new Line()
 
   // VARIABLE INITIALISATIONS
   // chat stuff
   listMessage.items = receivedText
 
   // canvas stuff
-  initialContext.setFill(Color.White) // Set your initial canvas color here
-  initialContext.fillRect(0, 0, canvas.width.value, canvas.height.value)
+  gc.setFill(Color.White) // Set your initial canvas color here
+  gc.fillRect(0, 0, canvas.width.value, canvas.height.value)
 
   // tools stuff
   colorPicker.value = Color.Black
   var currentColor = colorPicker.value
-  toolComboBox.items = ObservableBuffer[String]("Pen", "Pencil", "Brush", "Eraser")
+  toolComboBox.items = ObservableBuffer[String]("Pen", "Eraser", "Line")
   toolComboBox.value = toolComboBox.items.getValue.get(0) // initial tool
   var currentTool = toolComboBox.value
 
@@ -83,68 +85,71 @@ class DrawingBoardController( // chat stuff
 
   // canvas stuff
   // canvas onMouseClick event
-  def startDrawing(event: MouseEvent): Unit = {
-    val context = canvas.graphicsContext2D
-    context.beginPath()
-    context.moveTo(event.x, event.y)
-    context.stroke()
-  }
-
-  // canvas onMouseDrag event
-  def continueDrawing(event: MouseDragEvent): Unit = {
-    val context = canvas.graphicsContext2D
-
-    // Choose drawing tool based on the current selection
+  canvas.setOnMousePressed((e) => {
     currentTool.value match {
-
       case "Pen" =>
-        context.lineTo(event.x, event.y)
-        context.setStroke(currentColor.value)
-        context.stroke()
-
-      case "Pencil" =>
-        context.beginPath()
-        context.moveTo(event.x, event.y)
-        context.lineTo(event.x + 1, event.y + 1) // Example of pencil drawing
-        context.setStroke(currentColor.value)
-        context.stroke()
-
-      case "Brush" =>
-        // Customize brush behavior
-        // Implement brush logic here
-        // Example: Vary stroke width based on the slider value
-        val strokeWidth = widthSlider.value
-        context.setLineWidth(strokeWidth.getValue * 2)
-        context.lineTo(event.x, event.y)
-        context.setStroke(currentColor.value)
-        context.stroke()
+        gc.setStroke(currentColor.getValue)
+        gc.beginPath
+        gc.lineTo(e.getX, e.getY)
 
       case "Eraser" =>
-        val bgColor = backgroundColorPicker.value.value // Get the selected background color
-        val eraserSize = widthSlider.value.value // Get the actual value from the binding
-        val eraserHalfSize = eraserSize / 2
+        val lineWidth = gc.getLineWidth
+        gc.fillRect(e.getX - lineWidth / 2, e.getY - lineWidth / 2, lineWidth, lineWidth)
 
-        context.setFill(bgColor)
-        context.fillRect(event.x - eraserHalfSize, event.y - eraserHalfSize, eraserSize, eraserSize)
-
+      case "Line" =>
+        gc.setStroke(currentColor.getValue)
+        line.setStartX(e.getX)
+        line.setStartY(e.getY)
     }
-  }
+  })
+
+  // canvas onMouseDrag event
+  canvas.setOnMouseDragged((e) => {
+    currentTool.value match {
+      case "Pen" =>
+        gc.lineTo(e.getX, e.getY)
+        gc.stroke
+
+      case "Eraser" =>
+        val lineWidth = gc.getLineWidth
+        gc.fillRect(e.getX - lineWidth / 2, e.getY - lineWidth / 2, lineWidth, lineWidth)
+
+      case _ =>
+    }
+  })
+
+  // canvas onMouseRelease event
+  canvas.setOnMouseReleased((e) => {
+    currentTool.value match {
+      case "Pen" =>
+        gc.lineTo(e.getX(), e.getY());
+        gc.stroke();
+        gc.closePath();
+
+      case "Eraser" =>
+        val lineWidth = gc.getLineWidth();
+        gc.fillRect(e.getX() - lineWidth / 2, e.getY() - lineWidth / 2, lineWidth, lineWidth);
+
+      case "Line" =>
+        line.setEndX(e.getX)
+        line.setEndY(e.getY)
+        gc.strokeLine(line.getStartX, line.getStartY, line.getEndX, line.getEndY)
+    }
+  })
 
   // tools stuff
   def changeBackgroundColor(canvas: Canvas, color: Color): Unit = {
-    val context = canvas.graphicsContext2D
-
     // Clear the canvas
-    context.clearRect(0, 0, canvas.width.value, canvas.height.value)
+      gc.clearRect(0, 0, canvas.width.value, canvas.height.value)
 
-    // Set the new background color
-    context.setFill(color)
-    context.fillRect(0, 0, canvas.width.value, canvas.height.value)
+
+  // Set the new background color
+    gc.setFill(color)
+    gc.fillRect(0, 0, canvas.width.value, canvas.height.value)
   }
 
   // clear canvas onAction
   def clearCanvas(actionEvent: ActionEvent): Unit = {
-
     canvas.graphicsContext2D.clearRect(
       0,
       0,
@@ -173,6 +178,12 @@ class DrawingBoardController( // chat stuff
       case _ =>
     }
   }
+
+  // slider on drag done
+  widthSlider.valueProperty.addListener((e) => {
+    val width = widthSlider.getValue
+    gc.setLineWidth(width)
+  })
 
   // tools onAction
   def changeTool(actionEvent: ActionEvent): Unit = {

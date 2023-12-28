@@ -13,15 +13,19 @@
 <?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.effect.DropShadow?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="900.0" prefWidth="1600.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.hep88.view.DrawingBoardController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="900.0" prefWidth="1600.0" style="-fx-background-color: lightgrey;" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.hep88.view.DrawingBoardController">
    <center>
-      <Canvas fx:id="canvas" height="800.0" onMouseClicked="#startDrawing" onMouseDragged="#continueDrawing" width="1000.0" BorderPane.alignment="CENTER">
+      <Canvas fx:id="canvas" height="800.0" width="1000.0" BorderPane.alignment="CENTER">
          <BorderPane.margin>
             <Insets />
          </BorderPane.margin>
+         <effect>
+            <DropShadow />
+         </effect>
       </Canvas>
    </center>
    <bottom>
